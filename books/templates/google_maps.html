@@ -83,92 +83,153 @@
     <script>
 // In the following example, markers appear when the user clicks on the map.
 // Each marker is labeled with a single alphabetical character.
-var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-var labelIndex = 0;
-var markers = [];
+
+    var index_right = [];
+    var index_left = [];
+    var markers = [];
+    var x1 = [];
+    var y1 = [];
+    var x2 = [];
+    var y2 =[];
+    var directionsDisplay;
+    var directionsService = new google.maps.DirectionsService();
+    var map;
 
 
-function initialize() {
-  var bangalore = { lat: 50.4500, lng: 30.5200 };
+    function initialize() {
+        var bangalore = {lat: 50.4500, lng: 30.5200};
+        directionsDisplay = new google.maps.DirectionsRenderer();
 
 
-  var map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: bangalore
-  });
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: bangalore
+        });
+        directionsDisplay.setMap(map);
+{#        google.maps.event.addDomListener(document.getElementById('routebtn'), 'click', calcRoute);#}
+{#        google.maps.event.addDomListener(document.getElementById('deletebtn'), 'click', deleteMarkers);#}
 
-  // This event listener calls addMarker() when the map is clicked.
-  google.maps.event.addListener(map, 'click', function(event) {
-      addMarker(event.latLng, map);
-      var x = event.latLng.lat();
-      var y = event.latLng.lng();
-      document.getElementById("lat").value = x;
-      document.getElementById("lng").value = y;
-  });
+        // This event listener calls addMarker() when the map is clicked.
+        google.maps.event.addListener(map, 'click', function (event) {
+            if (index_left == 1) {
+            }
+            else {
+                addMarker(event.latLng, map, start = true);
+                index_left++;
+                var x = event.latLng.lat();
+                var y = event.latLng.lng();
+                x1.push(x);
+                y1.push(y);
+                document.getElementById("lat").value = x;
+                document.getElementById("lng").value = y;
+            }
+        });
 
-    google.maps.event.addListener(map, 'rightclick', function(event) {
-        addEndMarker(event.latLng, map);
-        var x = event.latLng.lat();
-        var y = event.latLng.lng();
-        document.getElementById("lat2").value = x;
-        document.getElementById("lng2").value = y;
-    });
-}
+        google.maps.event.addListener(map, 'rightclick', function (event) {
+            if (index_right == 1) {
+            }
+            else {
+                addMarker(event.latLng, map, start = false);
+                index_right++;
+                var x = event.latLng.lat();
+                var y = event.latLng.lng();
+                x2.push(x);
+                y2.push(y);
+                document.getElementById("lat2").value = x;
+                document.getElementById("lng2").value = y;
+            }
+        });
+    }
 
-var getMarkerUniqueId= function(lat, lng) {
-    return lat + '_' + lng;
-};
+    var getMarkerUniqueId = function (lat, lng) {
+        return lat + '_' + lng;
+    };
 
-var removeMarker = function(marker, markerId) {
-    marker.setMap(null); // set markers setMap to null to remove it from map
-    delete markers[markerId]; // delete marker instance from markers object
-};
+    var removeMarker = function (marker, markerId) {
+        marker.setMap(null); // set markers setMap to null to remove it from map
+        delete markers[markerId]; // delete marker instance from markers object
+    };
 
-function addStartMarker(location, map) {
-    var marker = new google.maps.Marker({
-    position: location,
-    label: 'A',
-    map: map
-  });
-}
 
-function addEndMarker(location, map) {
-    var marker = new google.maps.Marker({
-    position: location,
-    label: 'B',
-    map: map
-  });
-}
-
-var bindMarkerEvents = function(marker) {
-    google.maps.event.addListener(marker, "rightclick", function (point) {
-        var markerId = getMarkerUniqueId(point.latLng.lat(), point.latLng.lng()); // get marker id by using clicked point's coordinate
-        var marker = markers[markerId]; // find marker
-        removeMarker(marker, markerId); // remove it
-    });
-};
 // Adds a marker to the map.
-function addMarker(location, map) {
-  // Add the marker at the clicked location, and add the next-available label
-  // from the array of alphabetical characters.
-    var markerId = getMarkerUniqueId(lat, lng);
-    var marker = new google.maps.Marker({
-        position: location,
-        label: labels[labelIndex++ % labels.length],
-        map: map,
-        id: 'marker_' + markerId
-      });
-    markers[markerId] = marker;
-    bindMarkerEvents(marker);
-}
+    function addMarker(location, map, start) {
+        // Add the marker at the clicked location, and add the next-available label
+        // from the array of alphabetical characters.
+        var markerId = getMarkerUniqueId(lat, lng);
+        if (start) {
+            var marker = new google.maps.Marker({
+                position: location,
+                label: 'A',
+                map: map,
+                id: 'marker_' + markerId
+            });
+        }
+        else {
+            var marker = new google.maps.Marker({
+                position: location,
+                label: 'B',
+                map: map,
+                id: 'marker_' + markerId
+            });
+        }
+        markers.push(marker)
+    }
 
-google.maps.event.addDomListener(window, 'load', initialize);
+    function setMapOnAll(map) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
+    }
+
+    function clearMarkers() {
+        setMapOnAll(null);
+    }
+
+    function deleteMarkers() {
+        clearMarkers();
+        markers = [];
+        index_right = [];
+        index_left = [];
+        directionsDisplay.setMap(null);
+    }
+
+    function calcRoute() {
+        var start = new google.maps.LatLng(x1[0], y1[0]);
+        var end = new google.maps.LatLng(x2[0], y2[0]);
+        var bounds = new google.maps.LatLngBounds();
+        console.log(start);
+        console.log(end);
+        bounds.extend(start);
+        bounds.extend(end);
+        map.fitBounds(bounds);
+        var request = {
+            origin: start,
+            destination: end,
+            travelMode: google.maps.TravelMode.DRIVING
+        };
+        directionsService.route(request, function (response, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+                directionsDisplay.setDirections(response);
+                directionsDisplay.setMap(map);
+            } else {
+                alert("Directions Request from " + start.toUrlValue(6) + " to " + end.toUrlValue(6) + " failed: " + status);
+            }
+            clearMarkers();
+        });
+    }
+   google.maps.event.addDomListener(window, 'load', initialize);
+
+
 
     </script>
   </head>
   <body>
   <div id="map" style="width: 500px; height: 500px">
       <div id="map"></div>
+  </div>
+  <div id="floating-panel">
+      <input onclick="deleteMarkers();" type=button value="Delete Markers">
+      <input onclick="calcRoute();" type=button value="Calculate Route">
   </div>
   <label>
       <br>
