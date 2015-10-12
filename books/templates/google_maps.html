@@ -1,248 +1,183 @@
-{#<html>#}
-{#<head>#}
-{#    <title>Contact us</title>#}
-{#</head>#}
-{#<body>#}
-{#    <h1>Contact us</h1>#}
-{#                <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js"></script>#}
-{#                <script type="text/javascript">#}
-{#                    var myCenter=new google.maps.LatLng(50.4500, 30.5200);#}
-{#                    var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';#}
-{#                    window.onload = function () {#}
-{#                        var mapOptions = {#}
-{#                            center: myCenter,#}
-{#                            zoom: 10,#}
-{#                            mapTypeId: google.maps.MapTypeId.ROADMAP,#}
-{#                        };#}
-{#                        var infoWindow = new google.maps.InfoWindow();#}
-{#                        var latlngbounds = new google.maps.LatLngBounds();#}
-{#                        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);#}
-{#                        google.maps.event.addListener(map, 'click', function (e) {#}
-{#                            var x = e.latLng.lat();#}
-{#                            var y = e.latLng.lng();#}
-{#                            document.getElementById("lat").value = x;#}
-{#                            document.getElementById("lng").value = y;#}
-{#                            var marker = new google.maps.Marker({#}
-{#                            position: {lat: x, lng: y},#}
-{#                            animation:google.maps.Animation.BOUNCE,#}
-{#                        });#}
-{#                            marker.setMap(map);#}
-{#                        });#}
-{#                        google.maps.event.addListener(map, 'rightclick', function (e) {#}
-{#                            var x = e.latLng.lat();#}
-{#                            var y = e.latLng.lng();#}
-{#                            document.getElementById("lat2").value = x;#}
-{#                            document.getElementById("lng2").value = y;#}
-{#                            var marker = new google.maps.Marker({#}
-{#                            position: {lat: x, lng: y},#}
-{#                            animation:google.maps.Animation.BOUNCE,#}
-{#                        });#}
-{#                            marker.setMap(map);#}
-{#                        });#}
-{#                    }#}
-{##}
-{#                    </script>#}
-{#                    <div id="dvMap" style="width: 500px; height: 500px">#}
-{#                        <div id="dvMap"></div>#}
-{#                    </div>#}
-{#        <label>#}
-{#            <br>#}
-{#            Begin:#}
-{#            <input type="text" id="lat" name="C" readonly="readonly"/>#}
-{#        <input type="text" id="lng" name="d" readonly="readonly"/>#}
-{#        </label>#}
-{#        <br>#}
-{#        <br>#}
-{#        <label>#}
-{#            End:#}
-{#            <input type="text" id="lat2" name="C" readonly="readonly"/>#}
-{#            <input type="text" id="lng2" name="d" readonly="readonly"/>#}
-{#        </label>#}
-{#    </form>#}
-{#</body>#}
-{#</html>#}
-{##}
-
-<!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Marker Labels</title>
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        height: 100%;
-      }
-    </style>
-    <script src="https://maps.googleapis.com/maps/api/js"></script>
-    <script>
-// In the following example, markers appear when the user clicks on the map.
-// Each marker is labeled with a single alphabetical character.
-
-    var index_right = [];
-    var index_left = [];
-    var markers = [];
-    var x1 = [];
-    var y1 = [];
-    var x2 = [];
-    var y2 =[];
-    var directionsDisplay;
-    var directionsService = new google.maps.DirectionsService();
-    var map;
-
-
-    function initialize() {
-        var bangalore = {lat: 50.4500, lng: 30.5200};
-        directionsDisplay = new google.maps.DirectionsRenderer();
-
-
-        map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 12,
-            center: bangalore
-        });
-        directionsDisplay.setMap(map);
-{#        google.maps.event.addDomListener(document.getElementById('routebtn'), 'click', calcRoute);#}
-{#        google.maps.event.addDomListener(document.getElementById('deletebtn'), 'click', deleteMarkers);#}
-
-        // This event listener calls addMarker() when the map is clicked.
-        google.maps.event.addListener(map, 'click', function (event) {
-            if (index_left == 1) {
-            }
-            else {
-                addMarker(event.latLng, map, start = true);
-                index_left++;
-                var x = event.latLng.lat();
-                var y = event.latLng.lng();
-                x1.push(x);
-                y1.push(y);
-                document.getElementById("lat").value = x;
-                document.getElementById("lng").value = y;
-            }
-        });
-
-        google.maps.event.addListener(map, 'rightclick', function (event) {
-            if (index_right == 1) {
-            }
-            else {
-                addMarker(event.latLng, map, start = false);
-                index_right++;
-                var x = event.latLng.lat();
-                var y = event.latLng.lng();
-                x2.push(x);
-                y2.push(y);
-                document.getElementById("lat2").value = x;
-                document.getElementById("lng2").value = y;
-            }
-        });
+<head>
+    <title>Search</title>
+        <input type="hidden" id="myVar" name="variable" value='{{ json }}'>
+</head>
+<body>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript">
+    //Array of JSON objects.
+    var myVar = document.getElementById("myVar").value;
+    var ee = JSON.parse(myVar);
+{#    console.log(ee[0]);#}
+    var markers = ee;
+{#    var markers = [#}
+{#    {#}
+{#        title: 'Aksa Beach',#}
+{#        lat: 19.1759668,#}
+{#        lng: 72.79504659999998,#}
+{#        description: 'Aksa Beach is a popular beach and a vacation spot in Aksa village at Malad, Mumbai.'#}
+{#    },#}
+{#    {#}
+{#        "title": 'Juhu Beach',#}
+{#        "lat": 19.0883595,#}
+{#        "lng": 72.82652380000002,#}
+{#        "description": 'Juhu Beach is one of favorite tourist attractions situated in Mumbai.'#}
+{#    },#}
+{#    {#}
+{#        "title": 'Girgaum Beach',#}
+{#        "lat": 18.9542149,#}
+{#        "lng": 72.81203529999993,#}
+{#        "description": 'Girgaum Beach commonly known as just Chaupati is one of the most famous public beaches in Mumbai.'#}
+{#    },#}
+{#    {#}
+{#        "title": 'Jijamata Udyan',#}
+{#        "lat": 18.979006,#}
+{#        "lng": 72.83388300000001,#}
+{#        "description": 'Jijamata Udyan is situated near Byculla station is famous as Mumbai (Bombay) Zoo.'#}
+{#    },#}
+{#    {#}
+{#        "title": 'Sanjay Gandhi National Park',#}
+{#        "lat": 19.2147067,#}
+{#        "lng": 72.91062020000004,#}
+{#        "description": 'Sanjay Gandhi National Park is a large protected area in the northern part of Mumbai city.'#}
+{#    }#}
+{#    ];#}
+    window.onload = function () {
+        LoadMap();
     }
+{#    function setRoute(routeNumber){#}
+{#         var mapOptions = {#}
+{#            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),#}
+{#            zoom: 2,#}
+{#            mapTypeId: google.maps.MapTypeId.ROADMAP#}
+{#        };#}
+{#        console.log(markers[0].lat, markers[0].lng);#}
+{#        var infoWindow = new google.maps.InfoWindow();#}
+{#        var latlngbounds = new google.maps.LatLngBounds();#}
+{#        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);#}
+{#            var data = markers[routeNumber];#}
+{#            document.write(document.getElementById('foo').innerHTML = '121');#}
+{#               var flightPath = new google.maps.Polyline({#}
+{#                path: data,#}
+{#                geodesic: true,#}
+{#                strokeColor: '#FF0000',#}
+{#                strokeOpacity: 10.0,#}
+{#                strokeWeight: 1});#}
+{#                flightPath.setMap(map)#}
+{#            console.log(data);#}
+{#            for (var c = 0; c < data.length; c++){#}
+{#                var data1 = data[c];#}
+{#                console.log(data1);#}
+{#                var myLatlng = new google.maps.LatLng(data1.lat, data1.lng);#}
+{#                var marker = new google.maps.Marker({#}
+{#                    position: myLatlng,#}
+{#                    map: map,#}
+{#                    title: data1.title#}
+{#                    });#}
+{#                    (function (marker, data1) {#}
+{#                    google.maps.event.addListener(marker, "click", function (e) {#}
+{#                        infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + data1.description + "</div>");#}
+{#                        infoWindow.open(map, marker);#}
+{#                    });#}
+{#                    })#}
+{#                        (marker, data1);#}
+{#                        latlngbounds.extend(marker.position);#}
+{#            }#}
+{#        var bounds = new google.maps.LatLngBounds();#}
+{#        map.setCenter(latlngbounds.getCenter());#}
+{#        map.fitBounds(latlngbounds);#}
 
-    var getMarkerUniqueId = function (lat, lng) {
-        return lat + '_' + lng;
-    };
-
-    var removeMarker = function (marker, markerId) {
-        marker.setMap(null); // set markers setMap to null to remove it from map
-        delete markers[markerId]; // delete marker instance from markers object
-    };
 
 
-// Adds a marker to the map.
-    function addMarker(location, map, start) {
-        // Add the marker at the clicked location, and add the next-available label
-        // from the array of alphabetical characters.
-        var markerId = getMarkerUniqueId(lat, lng);
-        if (start) {
-            var marker = new google.maps.Marker({
-                position: location,
-                label: 'A',
-                map: map,
-                id: 'marker_' + markerId
-            });
-        }
-        else {
-            var marker = new google.maps.Marker({
-                position: location,
-                label: 'B',
-                map: map,
-                id: 'marker_' + markerId
-            });
-        }
-        markers.push(marker)
-    }
 
-    function setMapOnAll(map) {
-        for (var i = 0; i < markers.length; i++) {
-            markers[i].setMap(map);
-        }
-    }
-
-    function clearMarkers() {
-        setMapOnAll(null);
-    }
-
-    function deleteMarkers() {
-        clearMarkers();
-        markers = [];
-        index_right = [];
-        index_left = [];
-        directionsDisplay.setMap(null);
-    }
-
-    function calcRoute() {
-        var start = new google.maps.LatLng(x1[0], y1[0]);
-        var end = new google.maps.LatLng(x2[0], y2[0]);
-        var bounds = new google.maps.LatLngBounds();
-        console.log(start);
-        console.log(end);
-        bounds.extend(start);
-        bounds.extend(end);
-        map.fitBounds(bounds);
-        var request = {
-            origin: start,
-            destination: end,
-            travelMode: google.maps.TravelMode.DRIVING
+{#    }#}
+    function LoadMap(route) {
+        var mapOptions = {
+            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),
+            zoom: 2,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        directionsService.route(request, function (response, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                directionsDisplay.setDirections(response);
-                directionsDisplay.setMap(map);
-            } else {
-                alert("Directions Request from " + start.toUrlValue(6) + " to " + end.toUrlValue(6) + " failed: " + status);
+{#        console.log(markers[0].lat, markers[0].lng);#}
+        var infoWindow = new google.maps.InfoWindow();
+        var latlngbounds = new google.maps.LatLngBounds();
+        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);
+        var routeId = false;
+        for (var i = 0; i < markers.length; i++){
+            console.log(routeId);
+            var data = markers[i];
+            if (typeof route === "undefined" || route === null){
+                route = 45646546
             }
-            clearMarkers();
-        });
+            console.log(i);
+            console.log(route)
+            if (i==route){
+                routeId = i;
+                var color = '#00FF00';
+                var weight = 3
+            }
+            else{
+                var color = '#GF0000';
+                var weight = 0.1
+            }
+{#            document.write(document.getElementById('foo').innerHTML = '121');#}
+               var flightPath = new google.maps.Polyline({
+                path: data,
+                geodesic: true,
+                strokeColor: color,
+                strokeOpacity: 10.0,
+                strokeWeight: weight});
+                flightPath.setMap(map)
+            console.log(data);
+            for (var c = 0; c < data.length; c++){
+                var data1 = data[c];
+                console.log(data1);
+                var myLatlng = new google.maps.LatLng(data1.lat, data1.lng);
+                var marker = new google.maps.Marker({
+                    position: myLatlng,
+                    map: map,
+                    label: data1.label,
+                    title: data1.title
+                    });
+                if (data1.label=='S' && route==routeId){
+                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green.png')
+                }
+                else if (data1.label=='F' && route==routeId){
+                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red.png')
+                }
+                else{
+                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/grey.png')
+                }
+                    (function (marker, data1) {
+                    google.maps.event.addListener(marker, "click", function (e) {
+                        console.log(routeId);
+                        if (route==routeId){
+                        infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + data1.description + "</div>");
+                        infoWindow.open(map, marker);}
+                    });
+                    })
+                        (marker, data1);
+                        latlngbounds.extend(marker.position);
+            }
+            if (route==routeId){
+                   break
+            }
+        }
+        var bounds = new google.maps.LatLngBounds();
+        map.setCenter(latlngbounds.getCenter());
+        map.fitBounds(latlngbounds);
     }
-   google.maps.event.addDomListener(window, 'load', initialize);
-
-
-
-    </script>
-  </head>
-  <body>
-  <div id="map" style="width: 500px; height: 500px">
-      <div id="map"></div>
-  </div>
-  <div id="floating-panel">
-      <input onclick="deleteMarkers();" type=button value="Delete Markers">
-      <input onclick="calcRoute();" type=button value="Calculate Route">
-  </div>
-  <label>
-      <br>
-            Begin:
-      <input type="text" id="lat" name="C" readonly="readonly"/>
-      <input type="text" id="lng" name="d" readonly="readonly"/>
-  </label>
-       <br>
-       <br>
-  <label>
-            End:
-       <input type="text" id="lat2" name="C" readonly="readonly"/>
-       <input type="text" id="lng2" name="d" readonly="readonly"/>
-  </label>
-  </body>
+</script>
+<div id="dvMap" style="width: 800px; height: 600px">
+</div>
+    <button type="button" onclick="LoadMap();">Show all routes</button><br>
+{% if routes %}
+    <ul>
+        {% for j in routes %}
+            <li>"323232"</li>
+                <button type="button" onclick="LoadMap({{ forloop.counter0 }})">Show route number: {{ forloop.counter }}</button>
+        {% endfor %}
+    </ul>
+{% endif %}
+</body>
 </html>
