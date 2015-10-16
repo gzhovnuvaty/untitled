@@ -2,69 +2,259 @@
 <head>
     <title>Search</title>
         <input type="hidden" id="myVar" name="variable" value='{{ json }}'>
+        <input type="hidden" id="yy" name="variable" value='{{ test }}'>
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static "map.css" %}">
 </head>
 <body>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript">
     //Array of JSON objects.
-    var myVar = document.getElementById("myVar").value;
+     var myVar = document.getElementById("myVar").value;
     var ee = JSON.parse(myVar);
-{#    console.log(ee[0]);#}
     var markers = ee;
-{#    var markers = [#}
-{#    {#}
-{#        title: 'Aksa Beach',#}
-{#        lat: 19.1759668,#}
-{#        lng: 72.79504659999998,#}
-{#        description: 'Aksa Beach is a popular beach and a vacation spot in Aksa village at Malad, Mumbai.'#}
-{#    },#}
-{#    {#}
-{#        "title": 'Juhu Beach',#}
-{#        "lat": 19.0883595,#}
-{#        "lng": 72.82652380000002,#}
-{#        "description": 'Juhu Beach is one of favorite tourist attractions situated in Mumbai.'#}
-{#    },#}
-{#    {#}
-{#        "title": 'Girgaum Beach',#}
-{#        "lat": 18.9542149,#}
-{#        "lng": 72.81203529999993,#}
-{#        "description": 'Girgaum Beach commonly known as just Chaupati is one of the most famous public beaches in Mumbai.'#}
-{#    },#}
-{#    {#}
-{#        "title": 'Jijamata Udyan',#}
-{#        "lat": 18.979006,#}
-{#        "lng": 72.83388300000001,#}
-{#        "description": 'Jijamata Udyan is situated near Byculla station is famous as Mumbai (Bombay) Zoo.'#}
-{#    },#}
-{#    {#}
-{#        "title": 'Sanjay Gandhi National Park',#}
-{#        "lat": 19.2147067,#}
-{#        "lng": 72.91062020000004,#}
-{#        "description": 'Sanjay Gandhi National Park is a large protected area in the northern part of Mumbai city.'#}
-{#    }#}
-{#    ];#}
+    var flightPathsArray = [];
+    var map;
+    var current_route = null;
+    var infoWindow = new google.maps.InfoWindow();
+    var zIndex = 0;
+    var zIndex1 = 0;
+
     window.onload = function () {
-        LoadMap();
+        initMap();
     }
-{#    function setRoute(routeNumber){#}
-{#         var mapOptions = {#}
+
+    function RouteInfo(route){
+        var route = markers[route];
+{#        var orderAmount = markers[route]#}
+        console.log(route.length);
+        return route
+
+    }
+
+
+        function initMap()
+    {
+        var latlngbounds = new google.maps.LatLngBounds();
+        var map_container = document.getElementById("dvMap");
+
+        map = new google.maps.Map(map_container, {
+            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),
+            zoom: 2,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+
+        for (var i = 0; i < markers.length; i++){
+            var route_markers = markers[i];
+            var route_polygons = markers[i][0]["polygons"];
+
+            var flightPath = new google.maps.Polyline({
+                path: route_markers,
+                map: map,
+                geodesic: true,
+                strokeColor: '#GF0000',
+                strokeOpacity: 10.0,
+                strokeWeight: 0.1,
+                markers: addMarkers(route_markers, latlngbounds),
+                polygons: addPolygons(route_polygons),
+                route: i
+            });
+
+            flightPathsArray.push(flightPath);
+        }
+
+        map.setCenter(latlngbounds.getCenter());
+        map.fitBounds(latlngbounds);
+    }
+
+    function addPolygons(route_polygons)
+    {
+        var polygons_array = [];
+
+        for (var i = 0; i < route_polygons.length; i++){
+            var routePolygon = new google.maps.Polygon({
+                paths: route_polygons[i],
+                map: map,
+                strokeColor: '#D7E4E5',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#D7E4E5',
+                fillOpacity: 0.35
+            });
+
+            polygons_array.push(routePolygon)
+        }
+
+        return polygons_array
+    }
+
+    function addMarkers(route_markers, latlngbounds)
+    {
+        var markers_array = [];
+
+        for (var i = 0; i < route_markers.length; i++){
+            var marker_data = route_markers[i];
+
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(marker_data.lat, marker_data.lng),
+                icon: 'http://maps.google.com/mapfiles/ms/icons/grey.png',
+                map: map,
+                label: marker_data.label,
+                title: marker_data.title,
+                description: marker_data.description,
+                clickable: true
+            });
+
+            (function (marker) {
+                google.maps.event.addListener(marker, "click", function (e) {
+                    infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + marker.description + "</div>");
+                    infoWindow.open(map, marker);
+                });
+            })(marker);
+
+            markers_array.push(marker);
+            latlngbounds.extend(marker.position);
+        }
+
+        return markers_array;
+    }
+
+    function showAllRoutes()
+    {
+        var latlngbounds = new google.maps.LatLngBounds();
+
+        for (var i = 0; i < flightPathsArray.length; i++) {
+            updateRoutePath(i, false, latlngbounds);
+        }
+
+        map.setCenter(latlngbounds.getCenter());
+        map.fitBounds(latlngbounds);
+
+        current_route = null;
+    }
+
+	function HighlightRoute(route)
+    {
+        if (current_route != route) {
+            updateRoutePath(current_route, false);
+            updateRoutePath(route, true);
+
+            current_route = route;
+        }
+	}
+
+    function getRouteStyle(highlighted)
+    {
+        return highlighted
+            ? {strokeColor: '#00FF00', strokeWeight: 3}
+            : {strokeColor: '#GF0000', strokeWeight: 0.1}
+    }
+
+    function getMarkerIcon(marker, highlighted)
+    {
+        var icon = 'grey.png';
+
+        if (highlighted) {
+            icon = (marker.label == 'S')
+            ? 'green.png'
+            : 'red.png';
+        }
+
+        return 'http://maps.google.com/mapfiles/ms/icons/' + icon;
+    }
+
+    function getPolygonStyle(polygon, highlighted)
+    {
+        return highlighted
+            ? {fillColor: '#FF0000'}
+            : {fillColor: '#D7E4E5'};
+    }
+
+    function updateRoutePath(route, highlighted, latlngbounds)
+    {
+        if ((typeof route != 'undefined') && (route != null)) {
+            var flight_path = flightPathsArray[route];
+            var route_style = getRouteStyle(highlighted);
+
+            route_style.zIndex = google.maps.Marker.MAX_ZINDEX + 2;
+
+            flight_path.setOptions(route_style);
+
+            updateRouteMarkers(flight_path.markers, highlighted, latlngbounds);
+            updateRoutePolygons(flight_path.polygons, highlighted);
+        }
+    }
+
+    function updateRoutePolygons(route_polygons, highlighted)
+    {
+        for (var i = 0; i < route_polygons.length; i++) {
+            var polygon = route_polygons[i];
+            var options = getPolygonStyle(polygon, highlighted);
+
+            options.zIndex = highlighted ? google.maps.Marker.MAX_ZINDEX + 1 : i;
+
+            polygon.setOptions(options);
+        }
+    }
+
+    function updateRouteMarkers(route_markers, highlighted, latlngbounds)
+    {
+        if (typeof latlngbounds == 'undefined') {
+            var latlngbounds = new google.maps.LatLngBounds();
+        }
+
+        for (var i = 0; i < route_markers.length; i++) {
+            var marker = route_markers[i];
+            var icon = getMarkerIcon(marker, highlighted);
+            var zIndex = highlighted ? google.maps.Marker.MAX_ZINDEX + 1 : i;
+
+            latlngbounds.extend(marker.position);
+            marker.setZIndex(zIndex);
+            marker.setIcon(icon);
+        }
+
+        if (highlighted) {
+            map.setCenter(latlngbounds.getCenter());
+            map.fitBounds(latlngbounds);
+        }
+    }
+
+
+{#    function LoadMap(route) {#}
+{#        var mapOptions = {#}
 {#            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),#}
 {#            zoom: 2,#}
 {#            mapTypeId: google.maps.MapTypeId.ROADMAP#}
 {#        };#}
-{#        console.log(markers[0].lat, markers[0].lng);#}
 {#        var infoWindow = new google.maps.InfoWindow();#}
 {#        var latlngbounds = new google.maps.LatLngBounds();#}
 {#        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);#}
-{#            var data = markers[routeNumber];#}
+{#        var routeId = false;#}
+{#        for (var i = 0; i < markers.length; i++){#}
+{#            console.log(routeId);#}
+{#            var data = markers[i];#}
+{#            if (typeof route === "undefined" || route === null){#}
+{#                route = 45646546#}
+{#            }#}
+{#            console.log(i);#}
+{#            console.log(route)#}
+{#            if (i==route){#}
+{#                routeId = i;#}
+{#                var color = '#00FF00';#}
+{#                var weight = 3#}
+{#            }#}
+{#            else{#}
+{#                var color = '#GF0000';#}
+{#                var weight = 0.1#}
+{#            }#}
 {#            document.write(document.getElementById('foo').innerHTML = '121');#}
 {#               var flightPath = new google.maps.Polyline({#}
 {#                path: data,#}
 {#                geodesic: true,#}
-{#                strokeColor: '#FF0000',#}
+{#                strokeColor: color,#}
 {#                strokeOpacity: 10.0,#}
-{#                strokeWeight: 1});#}
-{#                flightPath.setMap(map)#}
+{#                strokeWeight: weight});#}
+{#                flightPath.setMap(map);#}
 {#            console.log(data);#}
 {#            for (var c = 0; c < data.length; c++){#}
 {#                var data1 = data[c];#}
@@ -73,111 +263,120 @@
 {#                var marker = new google.maps.Marker({#}
 {#                    position: myLatlng,#}
 {#                    map: map,#}
+{#                    label: data1.label,#}
 {#                    title: data1.title#}
 {#                    });#}
+{#                if (data1.label=='S' && route==routeId){#}
+{#                    console.log("greeeen!!!")#}
+{#                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green.png')#}
+{#                }#}
+{#                else if (data1.label=='F' && route==routeId){#}
+{#                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red.png')#}
+{#                }#}
+{#                else{#}
+{#                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/grey.png')#}
+{#                }#}
 {#                    (function (marker, data1) {#}
 {#                    google.maps.event.addListener(marker, "click", function (e) {#}
+{#                        console.log(routeId);#}
+{#                        if (route==routeId){#}
 {#                        infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + data1.description + "</div>");#}
-{#                        infoWindow.open(map, marker);#}
+{#                        infoWindow.open(map, marker);}#}
 {#                    });#}
 {#                    })#}
 {#                        (marker, data1);#}
 {#                        latlngbounds.extend(marker.position);#}
 {#            }#}
+{#            if (route==routeId){#}
+{#                   break#}
+{#            }#}
+{#        }#}
 {#        var bounds = new google.maps.LatLngBounds();#}
 {#        map.setCenter(latlngbounds.getCenter());#}
 {#        map.fitBounds(latlngbounds);#}
-
-
-
-
 {#    }#}
-    function LoadMap(route) {
-        var mapOptions = {
-            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),
-            zoom: 2,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-{#        console.log(markers[0].lat, markers[0].lng);#}
-        var infoWindow = new google.maps.InfoWindow();
-        var latlngbounds = new google.maps.LatLngBounds();
-        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);
-        var routeId = false;
-        for (var i = 0; i < markers.length; i++){
-            console.log(routeId);
-            var data = markers[i];
-            if (typeof route === "undefined" || route === null){
-                route = 45646546
-            }
-            console.log(i);
-            console.log(route)
-            if (i==route){
-                routeId = i;
-                var color = '#00FF00';
-                var weight = 3
-            }
-            else{
-                var color = '#GF0000';
-                var weight = 0.1
-            }
-{#            document.write(document.getElementById('foo').innerHTML = '121');#}
-               var flightPath = new google.maps.Polyline({
-                path: data,
-                geodesic: true,
-                strokeColor: color,
-                strokeOpacity: 10.0,
-                strokeWeight: weight});
-                flightPath.setMap(map)
-            console.log(data);
-            for (var c = 0; c < data.length; c++){
-                var data1 = data[c];
-                console.log(data1);
-                var myLatlng = new google.maps.LatLng(data1.lat, data1.lng);
-                var marker = new google.maps.Marker({
-                    position: myLatlng,
-                    map: map,
-                    label: data1.label,
-                    title: data1.title
-                    });
-                if (data1.label=='S' && route==routeId){
-                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green.png')
-                }
-                else if (data1.label=='F' && route==routeId){
-                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red.png')
-                }
-                else{
-                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/grey.png')
-                }
-                    (function (marker, data1) {
-                    google.maps.event.addListener(marker, "click", function (e) {
-                        console.log(routeId);
-                        if (route==routeId){
-                        infoWindow.setContent("<div style = 'width:200px;min-height:40px'>" + data1.description + "</div>");
-                        infoWindow.open(map, marker);}
-                    });
-                    })
-                        (marker, data1);
-                        latlngbounds.extend(marker.position);
-            }
-            if (route==routeId){
-                   break
-            }
-        }
-        var bounds = new google.maps.LatLngBounds();
-        map.setCenter(latlngbounds.getCenter());
-        map.fitBounds(latlngbounds);
-    }
 </script>
-<div id="dvMap" style="width: 800px; height: 600px">
-</div>
-    <button type="button" onclick="LoadMap();">Show all routes</button><br>
-{% if routes %}
+    <div id="leftSide">
+        <form method="post">
+            {% csrf_token %}
+            From: <br>
+            Lat: &nbsp;<input type="text" name="latf" id="latf"><br>
+            Lon: <input type="text" name="lngf" id="lngf">
+            <br>
+            To: <br>
+            Lat: &nbsp;<input type="text" id="latt" name="latt"/><br>
+            Lon: <input type="text" id="lngt" name="lngt"/><br>
+            People: <input type="number" min="1" max ="8" name="people_count" value="1"/><br>
+            Userid: <input type="number" name="userid" value="1"/><br>
+            Date:
+            <input name="date" type="text" data-time-format="M/d/y" id="date" value="{% now "SHORT_DATE_FORMAT" %}"/>
+            Time:
+            <input name="time" type="text" data-time-format="H:i" id="time" />
+
+            <script type="text/javascript">
+{#                $('#time').timepicker({step: 5});#}
+            </script>
+
+            <input type="submit" value="<< INSERT >>">
+            <input type="reset" value="<< RESET >>" id="reset">
+        </form>
+    </div>
+    <div id="rightSide">
+        <div id="dvMap" style="width: 800px; height: 600px">
+        </div>
+    <div id="bottom_routelist">
+        <button type="button" onclick="showAllRoutes()">Show all routes</button><br>
+        {% if routes %}
     <ul>
         {% for j in routes %}
-            <li>"323232"</li>
-                <button type="button" onclick="LoadMap({{ forloop.counter0 }})">Show route number: {{ forloop.counter }}</button>
+            {% load maps_templates %}
+                <li>Amount of orders: {{ j|get_item:"amount_orders" }},
+                    amount of passengers: {{ j|get_item:"passenger_amount" }},
+                list of orders id: {{ j|get_item:"list_orders_id" }}</li>
+                <button type="button" onclick="HighlightRoute({{ forloop.counter0 }})">Route number: {{ forloop.counter }}</button>
         {% endfor %}
     </ul>
-{% endif %}
+        {% endif %}
+    </div>
+   <form action="" method="post">
+    {% csrf_token %}
+    <div class="field">
+        <label for="lat_from">Lat From:</label>
+        {{ form.lat_from }}
+    </div>
+    <p>
+    <div class="field">
+        <label for="lon_from">Lon From:</label>
+        {{ form.lon_from }}
+    </div>
+    <p>
+    <div class="field">
+        <label for="lat_to">Lat To:</label>
+        {{ form.lat_to }}
+    </div>
+    <p>
+    <div class="field">
+        <label for="lon_to">Lon To:</label>
+        {{ form.lon_to }}
+    </div>
+    <p>
+    <div class="id">
+        <label for="id">Id:</label>
+        {{ form.people }}
+    </div>
+    <p>
+    <div class="field">
+        <label for="data">Data:</label>
+        {{ form.data }}
+    </div>
+    <p>
+    <div class="field">
+        <label for="time">Time:</label>
+        {{ form.time }}
+    </div>
+    <p>
+    <input type="submit" value="Submit">
+</form>
+    </div>
 </body>
 </html>
