@@ -1,17 +1,37 @@
 <html>
+<style type="text/css">
+    #info {
+        float: left;
+        width: 250px;
+    }
+    #map {
+        float: left;
+        margin-right: 46px
+    }
+    #routes_info{
+        float: none;
+    }
+</style>
 <head>
     <title>Search</title>
-        <input type="hidden" id="myVar" name="variable" value='{{ json }}'>
-        <input type="hidden" id="yy" name="variable" value='{{ test }}'>
-    {% load staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static "map.css" %}">
+        <input type="hidden" id="myVar3" name="variable" value='{{ test1 }}'>
+        <input type="hidden" id="myVar1" name="variable" value='{{ json }}'>
+        <input type="hidden" id="myVar2" name="variable" value='{{ test }}'>
+
+{#    {% load staticfiles %}#}
+{#    <link rel="stylesheet" type="text/css" href="{% static "map.css" %}">#}
 </head>
 <body>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript">
     //Array of JSON objects.
-     var myVar = document.getElementById("myVar").value;
-    var ee = JSON.parse(myVar);
+    var myVar1 = document.getElementById("myVar1").value;
+    console.log(myVar1)
+    var myVar2 = document.getElementById("myVar2").value;
+    console.log(myVar2)
+    var ee = JSON.parse(myVar1);
+    var activeOrders = JSON.parse(myVar2);
+    console.log(activeOrders)
     var markers = ee;
     var flightPathsArray = [];
     var map;
@@ -33,55 +53,116 @@
     }
 
 
-        function initMap()
-    {
-        var latlngbounds = new google.maps.LatLngBounds();
-        var map_container = document.getElementById("dvMap");
+        function initMap() {
+            var latlngbounds = new google.maps.LatLngBounds();
+            var map_container = document.getElementById("dvMap");
 
-        map = new google.maps.Map(map_container, {
-            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),
-            zoom: 2,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        });
-
-        for (var i = 0; i < markers.length; i++){
-            var route_markers = markers[i];
-            var route_polygons = markers[i][0]["polygons"];
-
-            var flightPath = new google.maps.Polyline({
-                path: route_markers,
-                map: map,
-                geodesic: true,
-                strokeColor: '#GF0000',
-                strokeOpacity: 10.0,
-                strokeWeight: 0.1,
-                markers: addMarkers(route_markers, latlngbounds),
-                polygons: addPolygons(route_polygons),
-                route: i
+            if (markers.length == 0) {
+                var lat = 4987184883;
+                var lng = 2398452759;
+            }
+            else {
+                var lat = markers[0].lat;
+                var lng = markers[0].lng;
+            }
+            map = new google.maps.Map(map_container, {
+                {#            center: new google.maps.LatLng(markers[0].lat, markers[0].lng),#}
+                center: new google.maps.LatLng(lat, lng),
+                zoom: 2,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
             });
 
-            flightPathsArray.push(flightPath);
+            for (var c = 0; c < activeOrders.length; c++) {
+                addMarkers(activeOrders[c], latlngbounds);
+                addPolygons(activeOrders[c][0]["polygons"], true);
+
+                console.log(activeOrders[c][0]["polygons"])
+            }
+
+            for (var i = 0; i < markers.length; i++) {
+                var route_markers = markers[i];
+                console.log(markers[i])
+                var route_polygons = markers[i][0]["polygons"];
+                console.log(markers[i][0]["polygons"])
+                var flightPath = new google.maps.Polyline({
+                    path: route_markers,
+                    map: map,
+                    geodesic: true,
+                    strokeColor: '#GF0000',
+                    strokeOpacity: 10.0,
+                    strokeWeight: 0.1,
+                    markers: addMarkers(route_markers, latlngbounds),
+                    polygons: addPolygons(route_polygons),
+                    route: i
+                });
+
+                flightPathsArray.push(flightPath);
+            }
+
+            map.setCenter(latlngbounds.getCenter());
+            map.fitBounds(latlngbounds);
+            addListeners(map);
         }
 
-        map.setCenter(latlngbounds.getCenter());
-        map.fitBounds(latlngbounds);
+
+        var addListeners = function(item) {
+         google.maps.event.addListener(item, "rightclick", function(event) {
+            var lat = event.latLng.lat();
+            var lng = event.latLng.lng();
+            lat = lat.toString()
+            lat = lat.replace(/\./g,'');
+            lat = lat.slice(0,8)
+            lat = parseInt(lat,10);
+            document.getElementById('id_lat_to').value = lat;
+            lng = lng.toString()
+            lng = lng.replace(/\./g,'');
+            lng = lng.slice(0,8)
+            lng = parseInt(lng,10);
+            document.getElementById('id_lon_to').value = lng;
+        });
+
+         google.maps.event.addListener(item, "click", function(event) {
+            var lat = event.latLng.lat();
+            var lng = event.latLng.lng();
+             lat = lat.toString()
+            lat = lat.replace(/\./g,'');
+             lat = lat.slice(0,8)
+            lat = parseInt(lat,10);
+             document.getElementById('id_lat_from').value = lat;
+              lng = lng.toString()
+            lng = lng.replace(/\./g,'');
+             lng = lng.slice(0,8)
+            lng = parseInt(lng,10);
+             console.log(lng)
+             document.getElementById('id_lon_from').value = lng;
+        });
+
     }
 
-    function addPolygons(route_polygons)
+
+
+    function addPolygons(route_polygons, active_order)
     {
+        if (active_order){
+            var fill_color = '#4cdde1'
+        }
+        else{
+            var fill_color = '#878F90'
+        }
         var polygons_array = [];
 
         for (var i = 0; i < route_polygons.length; i++){
+            console.log(route_polygons.length)
             var routePolygon = new google.maps.Polygon({
                 paths: route_polygons[i],
                 map: map,
                 strokeColor: '#D7E4E5',
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
-                fillColor: '#D7E4E5',
+                fillColor: fill_color,
                 fillOpacity: 0.35
             });
-
+            addListeners(routePolygon)
             polygons_array.push(routePolygon)
         }
 
@@ -94,6 +175,7 @@
 
         for (var i = 0; i < route_markers.length; i++){
             var marker_data = route_markers[i];
+{#            console.log(marker_data)#}
 
             var marker = new google.maps.Marker({
                 position: new google.maps.LatLng(marker_data.lat, marker_data.lng),
@@ -167,7 +249,7 @@
     {
         return highlighted
             ? {fillColor: '#FF0000'}
-            : {fillColor: '#D7E4E5'};
+            : {fillColor: '#878F90'};
     }
 
     function updateRoutePath(route, highlighted, latlngbounds)
@@ -296,36 +378,11 @@
 {#        map.fitBounds(latlngbounds);#}
 {#    }#}
 </script>
-    <div id="leftSide">
-        <form method="post">
-            {% csrf_token %}
-            From: <br>
-            Lat: &nbsp;<input type="text" name="latf" id="latf"><br>
-            Lon: <input type="text" name="lngf" id="lngf">
-            <br>
-            To: <br>
-            Lat: &nbsp;<input type="text" id="latt" name="latt"/><br>
-            Lon: <input type="text" id="lngt" name="lngt"/><br>
-            People: <input type="number" min="1" max ="8" name="people_count" value="1"/><br>
-            Userid: <input type="number" name="userid" value="1"/><br>
-            Date:
-            <input name="date" type="text" data-time-format="M/d/y" id="date" value="{% now "SHORT_DATE_FORMAT" %}"/>
-            Time:
-            <input name="time" type="text" data-time-format="H:i" id="time" />
-
-            <script type="text/javascript">
-{#                $('#time').timepicker({step: 5});#}
-            </script>
-
-            <input type="submit" value="<< INSERT >>">
-            <input type="reset" value="<< RESET >>" id="reset">
-        </form>
-    </div>
-    <div id="rightSide">
+    <div id="map">
         <div id="dvMap" style="width: 800px; height: 600px">
         </div>
-    <div id="bottom_routelist">
-        <button type="button" onclick="showAllRoutes()">Show all routes</button><br>
+    </div>
+<div id="routes_info">
         {% if routes %}
     <ul>
         {% for j in routes %}
@@ -337,46 +394,51 @@
         {% endfor %}
     </ul>
         {% endif %}
-    </div>
-   <form action="" method="post">
+</div>
+   <form action="" method="post" id="info">
     {% csrf_token %}
     <div class="field">
         <label for="lat_from">Lat From:</label>
         {{ form.lat_from }}
     </div>
-    <p>
+        <p>
     <div class="field">
         <label for="lon_from">Lon From:</label>
         {{ form.lon_from }}
     </div>
-    <p>
+        <p>
     <div class="field">
         <label for="lat_to">Lat To:</label>
         {{ form.lat_to }}
     </div>
-    <p>
+        <p>
     <div class="field">
         <label for="lon_to">Lon To:</label>
         {{ form.lon_to }}
     </div>
-    <p>
-    <div class="id">
-        <label for="id">Id:</label>
+       <p>
+    <div class="field">
+        <label for="people">People:</label>
         {{ form.people }}
     </div>
-    <p>
+        <p>
     <div class="field">
-        <label for="data">Data:</label>
-        {{ form.data }}
+       <label for="user_id">Id:</label>
+       {{ form.user_id }}
     </div>
-    <p>
+        <p>
+    <div class="field">
+        <label for="date">Date:</label>
+        {{ form.date }}
+    </div>
+        <p>
     <div class="field">
         <label for="time">Time:</label>
         {{ form.time }}
     </div>
-    <p>
+        <p>
     <input type="submit" value="Submit">
+       <button type="button" onclick="showAllRoutes()">Show all routes</button><br>
 </form>
-    </div>
 </body>
 </html>
